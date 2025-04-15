@@ -1,0 +1,51 @@
+modules = ["zig"]
+
+[nix]
+channel = "stable-24_05"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Rainbow Hello"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "run_rainbow_hello"
+
+[[workflows.workflow]]
+name = "Rainbow Hello"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "zig build run"
+
+[[workflows.workflow]]
+name = "run_rainbow_hello"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "zig build run"
+
+[deployment]
+run = ["sh", "-c", "zig build run"]
