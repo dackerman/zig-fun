@@ -34,4 +34,12 @@ pub fn build(b: *std.Build) void {
     // Creates a step for running the executable
     const run_step = b.step("run", "Run the rainbow hello world app");
     run_step.dependOn(&run_cmd.step);
+    
+    // Add a step to run with a custom message
+    const custom_run_cmd = b.addRunArtifact(exe);
+    custom_run_cmd.step.dependOn(b.getInstallStep());
+    custom_run_cmd.addArg("Rainbow Text Animation");
+    
+    const custom_run_step = b.step("custom", "Run with custom text: 'Rainbow Text Animation'");
+    custom_run_step.dependOn(&custom_run_cmd.step);
 }

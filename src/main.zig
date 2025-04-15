@@ -1,11 +1,20 @@
 const std = @import("std");
+const time = std.time;
 
 pub fn main() !void {
     // Get stdout
     const stdout = std.io.getStdOut().writer();
     
-    // The text to print
-    const text = "hello world";
+    // Parse command line arguments
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+    
+    const args = try std.process.argsAlloc(allocator);
+    defer std.process.argsFree(allocator, args);
+    
+    // The text to print (default or from command line)
+    const text = if (args.len > 1) args[1] else "hello world";
     
     // ANSI escape sequence for colors (foreground colors 31-36)
     const colors = [_][]const u8{
@@ -20,16 +29,36 @@ pub fn main() !void {
     // ANSI code to reset text formatting
     const reset = "\x1b[0m";
     
-    // Print each character with a different color
-    for (text, 0..) |char, i| {
-        // Select color based on position (cycle through colors)
-        const color_index = i % colors.len;
-        const color = colors[color_index];
+    // Animation parameters
+    const animation_frames = 30;
+    const delay_ms = 100; // milliseconds between frames
+    
+    // Clear screen before starting animation
+    try stdout.print("\x1b[2J\x1b[H", .{});
+    
+    // Animation loop
+    var frame: usize = 0;
+    while (frame < animation_frames) : (frame += 1) {
+        // Move cursor to start position
+        try stdout.print("\x1b[H", .{});
         
-        // Print the colored character
-        try stdout.print("{s}{c}", .{ color, char });
+        // Print each character with a different color
+        for (text, 0..) |char, i| {
+            // Select color based on position and current frame (cycle through colors)
+            const color_index = (i + frame) % colors.len;
+            const color = colors[color_index];
+            
+            // Print the colored character
+            try stdout.print("{s}{c}", .{ color, char });
+        }
+        
+        // Reset the color after printing all characters
+        try stdout.print("{s}", .{reset});
+        
+        // Wait before next frame
+        time.sleep(time.ns_per_ms * delay_ms);
     }
     
-    // Reset the color after printing all characters
-    try stdout.print("{s}\n", .{reset});
+    // Print a final newline
+    try stdout.print("\n", .{});
 }
